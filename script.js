@@ -1,5 +1,5 @@
 const broker = "d2f277161aef4f56a41ef426746a4219.s1.eu.hivemq.cloud";
-const port = 8884;  // WebSocket secure port
+const port = 8883;  // WebSocket secure port
 const username = "user1";
 const password = "User1234";
 let client;
