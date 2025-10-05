@@ -5,6 +5,98 @@ const password = "User1234";
 let client;
 const devices = {};
 
+// Logging function
+function log(msg) {
+  const monitor = document.getElementById("monitor");
+  const time = new Date().toLocaleTimeString();
+  monitor.innerHTML += `[${time}] ${msg}<br>`;
+  monitor.scrollTop = monitor.scrollHeight;
+}
+
+// MQTT callbacks
+function onConnect() {
+  log("✅ Connected to HiveMQ");
+  document.getElementById("connectionStatus").className = "status connected";
+  document.getElementById("connectionStatus").innerText = "🟢 Connected";
+
+  // Subscribe to all Advantech devices initially
+  client.subscribe("Advantech/+/data");
+}
+
+function onFail(response) {
+  log("❌ Connection failed: " + response.errorMessage);
+}
+
+function onConnectionLost(response) {
+  if (response.errorCode !== 0) {
+    log("⚠ Connection lost: " + response.errorMessage);
+    document.getElementById("connectionStatus").className = "status disconnected";
+    document.getElementById("connectionStatus").innerText = "🔴 Disconnected";
+  }
+}
+
+function onMessageArrived(message) {
+  log(`📩 Topic: ${message.destinationName}, Payload: ${message.payloadString}`);
+
+  // Extract MAC from topic
+  const topicParts = message.destinationName.split('/');
+  const mac = topicParts[1];
+
+  if (devices[mac]) {
+    const deviceDiv = devices[mac];
+    const dataDiv = deviceDiv.querySelector(".device-data");
+    const led = deviceDiv.querySelector(".led");
+
+    // Update the raw payload
+    dataDiv.innerText = message.payloadString;
+
+    // Update LED based on payload (ON/OFF)
+    const payload = message.payloadString.toUpperCase();
+    if (payload === "ON") {
+      led.classList.remove("off");
+      led.classList.add("on");
+    } else if (payload === "OFF") {
+      led.classList.remove("on");
+      led.classList.add("off");
+    }
+  }
+}
+
+// Add a device dynamically
+function addDevice() {
+  const mac = document.getElementById("macInput").value.trim();
+  if (!mac) return alert("Please enter a device MAC.");
+
+  if (devices[mac]) return alert("Device already added.");
+
+  // Create device element
+  const deviceDiv = document.createElement("div");
+  deviceDiv.className = "device";
+  deviceDiv.innerHTML = `
+    <h4>Device ${mac}</h4>
+    <div>Status: <span class="led off"></span></div>
+    <div class="device-data">No data yet</div>
+    <button onclick="sendCommand('${mac}', 'ON')">Turn ON</button>
+    <button onclick="sendCommand('${mac}', 'OFF')">Turn OFF</button>
+  `;
+
+  document.getElementById("devices").appendChild(deviceDiv);
+  devices[mac] = deviceDiv;
+
+  // Subscribe to this device's topic
+  client.subscribe(`Advantech/${mac}/data`);
+}
+
+// Send command to device
+function sendCommand(mac, cmd) {
+  const topic = `Advantech/${mac}/command`;
+  const message = new Paho.MQTT.Message(cmd);
+  message.destinationName = topic;
+  client.send(message);
+  log(`➡ Sent command "${cmd}" to ${mac}`);
+}
+
+// Connect to HiveMQ
 function connectMQTT() {
   client = new Paho.MQTT.Client(broker, port, "/mqtt", "webclient-" + Math.random().toString(16).substr(2, 8));
 
@@ -23,3 +115,6 @@ function connectMQTT() {
   log("Connecting to HiveMQ...");
   client.connect(options);
 }
+
+// Connect when page loads
+window.addEventListener("load", connectMQTT);
