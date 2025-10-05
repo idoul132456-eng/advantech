@@ -1,66 +1,49 @@
 body {
   font-family: Arial, sans-serif;
-  background: #f0f2f5;
   margin: 20px;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .status {
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 4px;
+  display: inline-block;
 }
 
 .connected {
-  background: #c8f7c5;
-  color: #006400;
+  background-color: #c8f7c5;
 }
 
 .disconnected {
-  background: #f7c5c5;
-  color: #640000;
-}
-
-.controls {
-  margin-top: 15px;
-  background: #fff;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
+  background-color: #f7c5c5;
 }
 
 .device {
-  border: 2px solid #ccc;
-  border-radius: 10px;
+  border: 1px solid #ccc;
   padding: 10px;
-  margin: 10px;
-  background: #fff;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  margin: 10px 0;
+  border-radius: 6px;
 }
 
 .led {
+  display: inline-block;
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  display: inline-block;
   margin-left: 5px;
-  border: 1px solid #444;
+  vertical-align: middle;
 }
 
-.on { background: green; }
-.off { background: red; }
+.on {
+  background-color: green;
+}
+
+.off {
+  background-color: red;
+}
 
 #monitor {
-  background: #1e1e1e;
-  color: #00ff00;
-  padding: 10px;
   height: 200px;
-  overflow-y: scroll;
-  border-radius: 10px;
-  margin-top: 10px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 5px;
 }
