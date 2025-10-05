@@ -3,19 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <title>HiveMQ ↔ Advantech Web Controller</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .status { padding: 5px 10px; border-radius: 4px; display: inline-block; }
+    .connected { background-color: #c8f7c5; }
+    .disconnected { background-color: #f7c5c5; }
+    .device { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 6px; }
+    .led { display: inline-block; width: 15px; height: 15px; border-radius: 50%; margin-left: 5px; vertical-align: middle; }
+    .on { background-color: green; }
+    .off { background-color: red; }
+    #monitor { height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; }
+  </style>
 
-  <!-- Load Paho MQTT library FIRST -->
-  <script src="https://unpkg.com/paho-mqtt/mqttws31.min.js"></script>
+  <!-- Load Paho MQTT library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/mqttws31.min.js"></script>
 
-  <!-- Then load your script -->
-  <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="header">
-    <h2>HiveMQ ↔ Advantech Web Controller</h2>
-    <div id="connectionStatus" class="status disconnected">🔴 Disconnected</div>
-  </div>
+
+  <h2>HiveMQ ↔ Advantech Web Controller</h2>
+  <div id="connectionStatus" class="status disconnected">🔴 Disconnected</div>
 
   <div class="controls">
     <label>Device MAC:</label>
@@ -27,5 +34,3 @@
 
   <h3>Monitoring</h3>
   <div id="monitor"></div>
-</body>
-</html>
