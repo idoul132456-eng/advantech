@@ -1,5 +1,5 @@
 const broker = "d2f277161aef4f56a41ef426746a4219.s1.eu.hivemq.cloud";
-const port = 8883;  // WebSocket secure port
+const port = 8884;  // WebSocket secure port
 const username = "user1";
 const password = "User1234";
 let client;
@@ -96,9 +96,10 @@ function sendCommand(mac, cmd) {
   log(`➡ Sent command "${cmd}" to ${mac}`);
 }
 
-// Connect to HiveMQ
 function connectMQTT() {
-  client = new Paho.MQTT.Client(broker, port, "/mqtt", "webclient-" + Math.random().toString(16).substr(2, 8));
+  const clientID = "webclient-" + Math.random().toString(16).substr(2, 8);
+  const wsURL = `wss://${broker}:8883/mqtt`;
+  client = new Paho.MQTT.Client(wsURL, clientID);
 
   const options = {
     useSSL: true,
@@ -115,6 +116,7 @@ function connectMQTT() {
   log("Connecting to HiveMQ...");
   client.connect(options);
 }
+
 
 // Connect when page loads
 window.addEventListener("load", connectMQTT);
