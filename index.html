@@ -34,3 +34,123 @@
 
   <h3>Monitoring</h3>
   <div id="monitor"></div>
+
+  <script>
+    const broker = "d2f277161aef4f56a41ef426746a4219.s1.eu.hivemq.cloud";
+    const port = 8883;  // Secure WebSocket port
+    const username = "user1";
+    const password = "User1234";
+    let client;
+    const devices = {};
+
+    // Logging helper
+    function log(msg) {
+      const monitor = document.getElementById("monitor");
+      const time = new Date().toLocaleTimeString();
+      monitor.innerHTML += `[${time}] ${msg}<br>`;
+      monitor.scrollTop = monitor.scrollHeight;
+    }
+
+    // MQTT callbacks
+    function onConnect() {
+      log("✅ Connected to HiveMQ");
+      const status = document.getElementById("connectionStatus");
+      status.className = "status connected";
+      status.innerText = "🟢 Connected";
+
+      // Subscribe to all devices
+      client.subscribe("Advantech/+/data");
+    }
+
+    function onFail(response) {
+      log("❌ Connection failed: " + response.errorMessage);
+    }
+
+    function onConnectionLost(response) {
+      if (response.errorCode !== 0) {
+        log("⚠ Connection lost: " + response.errorMessage);
+        const status = document.getElementById("connectionStatus");
+        status.className = "status disconnected";
+        status.innerText = "🔴 Disconnected";
+      }
+    }
+
+    function onMessageArrived(message) {
+      log(`📩 Topic: ${message.destinationName}, Payload: ${message.payloadString}`);
+
+      const parts = message.destinationName.split('/');
+      const mac = parts[1];
+      if (devices[mac]) {
+        const deviceDiv = devices[mac];
+        const dataDiv = deviceDiv.querySelector(".device-data");
+        const led = deviceDiv.querySelector(".led");
+
+        dataDiv.innerText = message.payloadString;
+
+        const payload = message.payloadString.toUpperCase();
+        if (payload === "ON") {
+          led.classList.remove("off");
+          led.classList.add("on");
+        } else if (payload === "OFF") {
+          led.classList.remove("on");
+          led.classList.add("off");
+        }
+      }
+    }
+
+    // Add a new device
+    function addDevice() {
+      const mac = document.getElementById("macInput").value.trim();
+      if (!mac) return alert("Please enter a device MAC.");
+      if (devices[mac]) return alert("Device already added.");
+
+      const deviceDiv = document.createElement("div");
+      deviceDiv.className = "device";
+      deviceDiv.innerHTML = `
+        <h4>Device ${mac}</h4>
+        <div>Status: <span class="led off"></span></div>
+        <div class="device-data">No data yet</div>
+        <button onclick="sendCommand('${mac}', 'ON')">Turn ON</button>
+        <button onclick="sendCommand('${mac}', 'OFF')">Turn OFF</button>
+      `;
+
+      document.getElementById("devices").appendChild(deviceDiv);
+      devices[mac] = deviceDiv;
+
+      client.subscribe(`Advantech/${mac}/data`);
+    }
+
+    // Send command
+    function sendCommand(mac, cmd) {
+      if (!client || !client.isConnected()) return log("⚠ Not connected yet.");
+      const topic = `Advantech/${mac}/command`;
+      const message = new Paho.MQTT.Message(cmd);
+      message.destinationName = topic;
+      client.send(message);
+      log(`➡ Sent command "${cmd}" to ${mac}`);
+    }
+
+    // Connect to MQTT
+    function connectMQTT() {
+      client = new Paho.MQTT.Client(broker, port, "/mqtt", "webclient-" + Math.random().toString(16).substr(2, 8));
+
+      const options = {
+        useSSL: true,
+        userName: username,
+        password: password,
+        timeout: 5,
+        onSuccess: onConnect,
+        onFailure: onFail
+      };
+
+      client.onConnectionLost = onConnectionLost;
+      client.onMessageArrived = onMessageArrived;
+
+      log("Connecting to HiveMQ...");
+      client.connect(options);
+    }
+
+    window.addEventListener("load", connectMQTT);
+  </script>
+</body>
+</html>
