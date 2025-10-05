@@ -98,7 +98,8 @@ function sendCommand(mac, cmd) {
 
 function connectMQTT() {
   const clientID = "webclient-" + Math.random().toString(16).substr(2, 8);
-  const wsURL = `wss://${broker}:8883/mqtt`;
+  const wsURL = `wss://${broker}:8884/mqtt`; // FULL WebSocket URL with wss://
+
   client = new Paho.MQTT.Client(wsURL, clientID);
 
   const options = {
@@ -116,7 +117,6 @@ function connectMQTT() {
   log("Connecting to HiveMQ...");
   client.connect(options);
 }
-
 
 // Connect when page loads
 window.addEventListener("load", connectMQTT);
