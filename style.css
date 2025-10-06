@@ -1,49 +1,68 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
+body { 
+    font-family: Arial; 
+    margin: 20px; 
+    background:#f5f6fa; 
+    color:#333; 
+}
+h2 { margin-bottom:10px; }
+
+.status { 
+    padding:5px 10px; 
+    border-radius:5px; 
+    display:inline-block; 
+    margin-bottom:10px; 
+}
+.status.connected { background:#4cd137; color:white; }
+.status.disconnected { background:#e84118; color:white; }
+
+#devices { display:flex; flex-wrap: wrap; gap:15px; }
+
+.device { 
+    background:white; 
+    padding:15px; 
+    border-radius:10px; 
+    box-shadow:0 2px 6px rgba(0,0,0,0.15); 
+    width:250px; 
+}
+.device h4 { margin:0 0 10px 0; font-size:16px; }
+
+.led { display:inline-block; width:15px; height:15px; border-radius:50%; margin-right:5px; }
+.led.on { background:#4cd137; }
+.led.off { background:#ccc; }
+
+.device-data { 
+    font-size:14px; 
+    margin:5px 0; 
+    height:60px; 
+    overflow:auto; 
+    background:#f1f2f6; 
+    padding:5px; 
+    border-radius:5px; 
 }
 
-.status {
-  padding: 5px 10px;
-  border-radius: 4px;
-  display: inline-block;
-}
+.controls { margin-bottom:15px; }
+.controls input { padding:5px; width:150px; margin-right:5px; }
 
-.connected {
-  background-color: #c8f7c5;
+button { 
+    padding:5px 10px; 
+    border:none; 
+    border-radius:5px; 
+    cursor:pointer; 
+    background:#40739e; 
+    color:white; 
+    margin-top:5px; 
+    margin-right:3px;
+    font-size:13px;
 }
+button:hover { background:#2f3640; }
 
-.disconnected {
-  background-color: #f7c5c5;
-}
-
-.device {
-  border: 1px solid #ccc;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 6px;
-}
-
-.led {
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  margin-left: 5px;
-  vertical-align: middle;
-}
-
-.on {
-  background-color: green;
-}
-
-.off {
-  background-color: red;
-}
-
-#monitor {
-  height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  padding: 5px;
+#monitor { 
+    margin-top:15px; 
+    height:150px; 
+    overflow:auto; 
+    background:#f1f2f6; 
+    padding:10px; 
+    border-radius:5px; 
+    font-family:monospace; 
+    font-size:13px; 
 }
