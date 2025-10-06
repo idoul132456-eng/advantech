@@ -1,98 +1,146 @@
+// HiveMQ Serverless config
 const broker = "d2f277161aef4f56a41ef426746a4219.s1.eu.hivemq.cloud";
 const port = 8884;
 const username = "user1";
 const password = "User1234";
+
 let client;
 const devices = {};
 
-function log(msg) {
-  const monitor = document.getElementById("monitor");
-  const time = new Date().toLocaleTimeString();
-  monitor.innerHTML += `[${time}] ${msg}<br>`;
-  monitor.scrollTop = monitor.scrollHeight;
+// Logger
+function log(msg){
+    const monitor = document.getElementById("monitor");
+    const time = new Date().toLocaleTimeString();
+    monitor.innerHTML += `[${time}] ${msg}<br>`;
+    monitor.scrollTop = monitor.scrollHeight;
+    console.log(msg);
 }
 
-function onConnect() {
-  log("✅ Connected to HiveMQ");
-  const status = document.getElementById("connectionStatus");
-  status.className = "status connected";
-  status.innerText = "🟢 Connected";
-  client.subscribe("Advantech/+/data");
+// Connect to MQTT broker
+function connectMQTT(){
+    const clientID = "webclient-" + Math.random().toString(16).substr(2,8);
+    const wsURL = `wss://${broker}:${port}/mqtt`;
+
+    client = mqtt.connect(wsURL, {
+        clientId: clientID,
+        username: username,
+        password: password,
+        protocol: "wss",
+        reconnectPeriod: 1000
+    });
+
+    client.on('connect', () => {
+        log("✅ Connected to HiveMQ");
+        const status = document.getElementById("connectionStatus");
+        status.className = "status connected";
+        status.innerText = "🟢 Connected";
+    });
+
+    client.on('reconnect', () => log("♻ Reconnecting..."));
+    client.on('error', (err) => log("❌ Connection error: " + err));
+    client.on('close', () => {
+        log("🔴 Connection closed");
+        const status = document.getElementById("connectionStatus");
+        status.className = "status disconnected";
+        status.innerText = "🔴 Disconnected";
+    });
+
+    client.on('message', (topic, payload) => {
+        const mac = topic.split('/')[1];
+        const json = payload.toString();
+        log(`📩 Topic: ${topic}, Payload: ${json}`);
+
+        if(devices[mac]){
+            const deviceDiv = devices[mac];
+            const dataDiv = deviceDiv.querySelector(".device-data");
+            dataDiv.innerText = json;
+
+            try {
+                const obj = JSON.parse(json);
+                // Update DO
+                for(let i=1;i<=4;i++){
+                    const led = deviceDiv.querySelector(`.do${i}`);
+                    if(led && obj[`do${i}`]!==undefined) {
+                        led.classList.toggle("on", obj[`do${i}`]===true);
+                        led.classList.toggle("off", obj[`do${i}`]!==true);
+                    }
+                }
+                // Update DI
+                for(let i=1;i<=4;i++){
+                    const led = deviceDiv.querySelector(`.di${i}`);
+                    if(led && obj[`di${i}`]!==undefined) {
+                        led.classList.toggle("on", obj[`di${i}`]===true);
+                        led.classList.toggle("off", obj[`di${i}`]!==true);
+                    }
+                }
+            } catch(e){
+                console.warn("Invalid JSON:", e);
+            }
+        }
+    });
 }
 
-function onFail(response) {
-  log("❌ Connection failed: " + response.errorMessage);
-}
-
-function onConnectionLost(response) {
-  if (response.errorCode !== 0) {
-    log("⚠ Connection lost: " + response.errorMessage);
-    const status = document.getElementById("connectionStatus");
-    status.className = "status disconnected";
-    status.innerText = "🔴 Disconnected";
-  }
-}
-
-function onMessageArrived(message) {
-  log(`📩 Topic: ${message.destinationName}, Payload: ${message.payloadString}`);
-  const mac = message.destinationName.split('/')[1];
-  if (devices[mac]) {
-    const deviceDiv = devices[mac];
-    const dataDiv = deviceDiv.querySelector(".device-data");
-    const led = deviceDiv.querySelector(".led");
-    dataDiv.innerText = message.payloadString;
-    const payload = message.payloadString.toUpperCase();
-    led.classList.toggle("on", payload === "ON");
-    led.classList.toggle("off", payload !== "ON");
-  }
-}
-
+// Add device dynamically with ON/OFF buttons
 function addDevice() {
-  const mac = document.getElementById("macInput").value.trim();
-  if (!mac) return alert("Please enter a device MAC.");
-  if (devices[mac]) return alert("Device already added.");
+    const mac = document.getElementById("macInput").value.trim();
+    if (!mac) return alert("Enter MAC");
+    if (devices[mac]) return alert("Device already added");
 
-  const deviceDiv = document.createElement("div");
-  deviceDiv.className = "device";
-  deviceDiv.innerHTML = `
-    <h4>Device ${mac}</h4>
-    <div>Status: <span class="led off"></span></div>
-    <div class="device-data">No data yet</div>
-    <button onclick="sendCommand('${mac}', 'ON')">Turn ON</button>
-    <button onclick="sendCommand('${mac}', 'OFF')">Turn OFF</button>
-  `;
-  document.getElementById("devices").appendChild(deviceDiv);
-  devices[mac] = deviceDiv;
-  client.subscribe(`Advantech/${mac}/data`);
+    const deviceDiv = document.createElement("div");
+    deviceDiv.className = "device";
+    deviceDiv.innerHTML = `
+        <h4>Device ${mac}</h4>
+        <div>
+            Inputs:
+            <span class="led di1 off"></span>DI1
+            <span class="led di2 off"></span>DI2
+            <span class="led di3 off"></span>DI3
+            <span class="led di4 off"></span>DI4
+        </div>
+        <div>
+            Outputs:
+            <span class="led do1 off"></span>DO1
+            <span class="led do2 off"></span>DO2
+            <span class="led do3 off"></span>DO3
+            <span class="led do4 off"></span>DO4
+        </div>
+        <div class="device-data">No data yet</div>
+        <div>
+            <button data-output="1" data-action="on">ON DO1</button>
+            <button data-output="1" data-action="off">OFF DO1</button>
+            <button data-output="2" data-action="on">ON DO2</button>
+            <button data-output="2" data-action="off">OFF DO2</button>
+            <button data-output="3" data-action="on">ON DO3</button>
+            <button data-output="3" data-action="off">OFF DO3</button>
+            <button data-output="4" data-action="on">ON DO4</button>
+            <button data-output="4" data-action="off">OFF DO4</button>
+        </div>
+    `;
+    document.getElementById("devices").appendChild(deviceDiv);
+    devices[mac] = deviceDiv;
+
+    // Subscribe to device data topic
+    client.subscribe(`Advantech/${mac}/data`, (err) => {
+        if (err) log("❌ Subscribe error: " + err);
+        else log(`Subscribed to Advantech/${mac}/data`);
+    });
+
+    // Attach button listeners
+    deviceDiv.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const output = btn.getAttribute("data-output");
+            const action = btn.getAttribute("data-action"); // "on" or "off"
+            const payload = {"v": action === "on"}; // {"v":true} for ON, {"v":false} for OFF
+
+            const topic = `Advantech/${mac}/ctl/do${output}`;
+            client.publish(topic, JSON.stringify(payload));
+            log(`➡ Sent ${JSON.stringify(payload)} to ${topic}`);
+        });
+    });
 }
 
-function sendCommand(mac, cmd) {
-  if (!client || !client.isConnected()) return log("⚠ Not connected yet.");
-  const message = new Paho.MQTT.Message(cmd);
-  message.destinationName = `Advantech/${mac}/command`;
-  client.send(message);
-  log(`➡ Sent command "${cmd}" to ${mac}`);
-}
-
-function connectMQTT() {
-  const clientID = "webclient-" + Math.random().toString(16).substr(2, 8);
-  const wsURL = `wss://${broker}:8884/mqtt`;
-  client = new Paho.MQTT.Client(wsURL, clientID);
-
-  client.onConnectionLost = onConnectionLost;
-  client.onMessageArrived = onMessageArrived;
-
-  const options = {
-    useSSL: true,
-    userName: username,
-    password: password,
-    timeout: 5,
-    onSuccess: onConnect,
-    onFailure: onFail
-  };
-
-  log("Connecting to HiveMQ...");
-  client.connect(options);
-}
-
-window.addEventListener("load", connectMQTT);
+// Initialize
+window.addEventListener("load", () => {
+    connectMQTT();
+    document.getElementById("addDeviceBtn").addEventListener("click", addDevice);
+});
