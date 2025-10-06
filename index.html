@@ -1,29 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>HiveMQ ↔ Advantech Web Controller</title>
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Paho MQTT library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/mqttws31.min.js"></script>
-  <script src="script.js" defer></script>
+<meta charset="UTF-8">
+<title>Advantech MQTT Dashboard</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>HiveMQ ↔ Advantech Web Controller</h2>
+<h2>Advantech MQTT Dashboard</h2>
 <div id="connectionStatus" class="status disconnected">🔴 Disconnected</div>
 
 <div class="controls">
   <label>Device MAC:</label>
   <input type="text" id="macInput" placeholder="74FE4887206A">
-  <button onclick="addDevice()">Add Device</button>
+  <button id="addDeviceBtn">Add Device</button>
 </div>
 
 <div id="devices"></div>
 
-<h3>Monitoring</h3>
+<h3>Monitor</h3>
 <div id="monitor"></div>
 
+<!-- MQTT.js browser version -->
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script src="script.js" defer></script>
 </body>
 </html>
